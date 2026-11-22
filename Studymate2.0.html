@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="./manifest.json">
+<title>StudyMate 2.0</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0f172a;color:#f8fafc;font-family:Arial,sans-serif;padding-bottom:85px}
+header{padding:22px 18px 10px}
+header h1{margin:0;font-size:27px}
+.muted,header p{color:#94a3b8;font-size:13px}
+main{padding:12px 16px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:16px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat strong{display:block;font-size:27px;margin-bottom:5px}
+h2{font-size:18px;margin:5px 0 14px}
+h3{font-size:15px;margin:0 0 8px}
+.progress{height:9px;background:#334155;border-radius:20px;overflow:hidden;margin:10px 0}
+.bar{height:100%;background:#38bdf8;width:0%;transition:width .2s}
+.page{display:none}
+.page.active{display:block}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#111c30;border-top:1px solid #334155;padding:10px 2px;z-index:10}
+button{border:0;border-radius:10px;padding:10px 13px;background:#2563eb;color:white;font-weight:bold;cursor:pointer}
+.tabs button{background:transparent;color:#94a3b8}
+.tabs button.active{color:#38bdf8}
+.chapter,.session{background:#263449;padding:14px;border-radius:13px;margin:10px 0}
+.chapter-top{display:flex;justify-content:space-between;gap:8px}
+.chapter small,.session small{color:#94a3b8}
+.lectures{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0}
+.lecture{background:#334155;color:white;min-width:42px}
+.lecture.done{background:#047857}
+.practice,.task{display:flex;align-items:center;gap:9px;font-size:13px}
+input[type=checkbox]{width:18px;height:18px;accent-color:#38bdf8}
+.task{padding:11px 0;border-bottom:1px solid #334155;font-size:14px}
+.session{border-left:4px solid #475569}
+.session.current{border-left-color:#38bdf8;background:#18334b}
+.session.finished{border-left-color:#10b981}
+.session-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.session label{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px}
+.session input{width:18px;height:18px;accent-color:#38bdf8}
+input[type=time],input[type=text],input[type=date]{background:#334155;color:white;border:1px solid #475569;padding:10px;border-radius:8px;width:100%;min-width:0}
+.editor-row{display:grid;grid-template-columns:1fr 85px 85px;gap:7px;margin:12px 0;align-items:center}
+.editor-row input{font-size:12px}
+.badge{font-size:11px;padding:5px 8px;border-radius:20px;background:#334155;color:#cbd5e1;white-space:nowrap}
+.badge.live{background:#075985;color:white}
+.badge.done{background:#065f46;color:white}
+.btn-secondary{background:#475569}
+.danger{background:#b91c1c}
+footer{text-align:center;color:#64748b;font-size:12px;padding:15px}
+  
+/* ===== STUDYMATE 3.0 ANIMATIONS ===== */
+
+body{
+ background:linear-gradient(
+  -45deg,
+  #0f172a,
+  #172554,
+  #312e81,
+  #0f172a
+ );
+ background-size:400% 400%;
+ animation:bgMove 16s ease infinite;
+ overflow-x:hidden;
+}
+
+@keyframes bgMove{
+ 0%{background-position:0% 50%}
+ 50%{background-position:100% 50%}
+ 100%{background-position:0% 50%}
+}
+
+/* Animated opening screen */
+#splash{
+ position:fixed;
+ inset:0;
+ z-index:9999;
+ background:linear-gradient(135deg,#020617,#1e1b4b,#1d4ed8);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ text-align:center;
+ animation:splashOut .7s ease 2.3s forwards;
+}
+
+.splash-content{
+ animation:logoEnter 1s cubic-bezier(.2,.8,.2,1);
+}
+
+.splash-logo{
+ width:100px;
+ height:100px;
+ margin:auto;
+ display:grid;
+ place-items:center;
+ font-size:48px;
+ background:rgba(255,255,255,.12);
+ border:1px solid rgba(255,255,255,.25);
+ border-radius:30px;
+ box-shadow:0 0 45px #3b82f6;
+ animation:logoPulse 1.8s ease-in-out infinite;
+}
+
+.splash-content h1{
+ font-size:34px;
+ margin:22px 0 8px;
+ letter-spacing:1px;
+}
+
+.splash-content p{
+ color:#cbd5e1;
+ font-size:14px;
+}
+
+.splash-content small{
+ display:block;
+ margin-top:20px;
+ color:#93c5fd;
+ letter-spacing:4px;
+}
+
+.loader{
+ width:110px;
+ height:4px;
+ background:#334155;
+ margin:25px auto;
+ border-radius:20px;
+ overflow:hidden;
+}
+
+.loader:after{
+ content:"";
+ display:block;
+ width:40%;
+ height:100%;
+ background:#60a5fa;
+ border-radius:20px;
+ animation:loading 1s ease-in-out infinite;
+}
+
+@keyframes loading{
+ from{transform:translateX(-100%)}
+ to{transform:translateX(280%)}
+}
+
+@keyframes logoEnter{
+ from{opacity:0;transform:translateY(35px) scale(.8)}
+ to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+@keyframes logoPulse{
+ 50%{transform:scale(1.07);box-shadow:0 0 65px #60a5fa}
+}
+
+@keyframes splashOut{
+ to{opacity:0;visibility:hidden;pointer-events:none}
+}
+
+/* Smooth page transitions */
+.page.active{
+ display:block;
+ animation:pageEnter .4s ease both;
+}
+
+@keyframes pageEnter{
+ from{opacity:0;transform:translateY(15px)}
+ to{opacity:1;transform:translateY(0)}
+}
+
+/* Premium cards */
+.card,.chapter,.session{
+ transition:transform .25s ease,box-shadow .25s ease,
+ background .3s ease;
+}
+
+.card:active,.chapter:active,.session:active{
+ transform:scale(.975);
+ box-shadow:0 0 22px rgba(56,189,248,.18);
+}
+
+/* Glowing buttons */
+button{
+ position:relative;
+ overflow:hidden;
+ transition:transform .18s ease,box-shadow .2s ease,
+ background .2s ease;
+ -webkit-tap-highlight-color:transparent;
+}
+
+button:active{
+ transform:scale(.92);
+ box-shadow:0 0 20px rgba(56,189,248,.5);
+}
+
+/* Ripple touch effect */
+.ripple{
+ position:absolute;
+ border-radius:50%;
+ background:rgba(255,255,255,.35);
+ transform:scale(0);
+ animation:rippleEffect .6s linear;
+ pointer-events:none;
+}
+
+@keyframes rippleEffect{
+ to{
+  transform:scale(4);
+  opacity:0;
+ }
+}
+
+/* Progress animation */
+.bar{
+ transition:width .9s cubic-bezier(.2,.8,.2,1);
+}
+
+/* Navigation */
+.tabs{
+ backdrop-filter:blur(18px);
+ -webkit-backdrop-filter:blur(18px);
+ background:rgba(15,23,42,.88);
+}
+
+.tabs button{
+ transition:transform .2s ease,color .2s ease;
+}
+
+.tabs button:active{
+ transform:scale(.85);
+}
+
+/* Current session glow */
+.session.current{
+ animation:sessionGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes sessionGlow{
+ 50%{box-shadow:0 0 20px rgba(56,189,248,.2)}
+}
+
+/* Accessibility: respect reduced motion */
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{
+  animation-duration:.01ms!important;
+  animation-iteration-count:1!important;
+  scroll-behavior:auto!important;
+  transition-duration:.01ms!important;
+ }
+}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-content">
+    <div class="splash-logo">📘</div>
+    <h1>StudyMate</h1>
+    <p>Your journey to success begins here.</p>
+    <div class="loader"></div>
+    <small>VERSION 3.0</small>
+  </div>
+</div>
+
+<header>
+<h1>📘 StudyMate</h1>
+<p>Your Class 10 study companion · Version 2.0</p>
+</header>
+
+<main>
+
+<section id="home" class="page active">
+<div class="card">
+<p class="muted">YOUR LECTURE PROGRESS</p>
+<h1 id="percent">0%</h1>
+<div class="progress"><div class="bar" id="mainBar"></div></div>
+<p class="muted" id="progressText">Let's get started!</p>
+</div>
+
+<div class="stats">
+<div class="card stat"><strong id="completed">0</strong><span class="muted">Lectures completed</span></div>
+<div class="card stat"><strong id="remaining">31</strong><span class="muted">Known lectures left</span></div>
+<div class="card stat"><strong id="practised">0</strong><span class="muted">Chapters practised</span></div>
+<div class="card stat"><strong id="left">12</strong><span class="muted">Practice targets left</span></div>
+</div>
+
+<div class="card">
+<h2>⏰ Current study session</h2>
+<h3 id="currentTitle">Checking your timetable...</h3>
+<p class="muted" id="currentTime"></p>
+<span class="badge" id="currentStatus">Loading</span>
+</div>
+
+<div class="card">
+<h2>📊 Today's timetable progress</h2>
+<h1 id="dailyPercent">0%</h1>
+<div class="progress"><div class="bar" id="dailyBar"></div></div>
+<p class="muted" id="dailyCount">0 of 13 sessions completed</p>
+</div>
+</section>
+
+<section id="tracker" class="page">
+<h2>📚 Lecture Tracker</h2>
+<p class="muted">Tap lecture numbers when completed.</p>
+<div id="chapters"></div>
+</section>
+
+<section id="daily" class="page">
+<h2>📅 Daily Timetable</h2>
+<div class="card">
+<h3>Study date</h3>
+<input type="date" id="studyDate">
+<p class="muted">Completion is saved separately for each date.</p>
+</div>
+<div class="card">
+<h2>Today's fixed schedule</h2>
+<div id="schedule"></div>
+</div>
+<div class="card">
+<h2>📝 Extra daily tasks</h2>
+<div id="dailyTasks"></div>
+</div>
+</section>
+
+<section id="settings" class="page">
+<h2>⚙️ Settings</h2>
+<div class="card">
+<h3>✏️ Edit your timetable</h3>
+<p class="muted">Change subject names and timings. Save when finished.</p>
+<div id="editor"></div>
+<button onclick="saveSchedule()">Save timetable</button>
+<button class="btn-secondary" onclick="resetSchedule()">Restore default timings</button>
+</div>
+<div class="card">
+<h3>Backup your progress</h3>
+<p class="muted">Download your saved tracker and timetable data.</p>
+<button onclick="exportData()">Export backup</button>
+</div>
+<div class="card">
+<h3>Reset all progress</h3>
+<button class="danger" onclick="resetData()">Reset progress</button>
+</div>
+<div class="card">
+<h3>About StudyMate</h3>
+<p class="muted">Class 10 CBSE 2027 · Version 2.0</p>
+</div>
+</section>
+
+</main>
+
+<nav class="tabs">
+<button class="active" data-page="home">🏠<br>Home</button>
+<button data-page="tracker">📚<br>Tracker</button>
+<button data-page="daily">📅<br>Daily</button>
+<button data-page="settings">⚙️<br>Settings</button>
+</nav>
+<footer>StudyMate · Keep learning, keep improving.</footer>
+
+<script>
+"use strict";
+
+const chapters=[
+{subject:"Science",name:"Carbon and its Compounds",count:6},
+{subject:"Science",name:"Magnetic Effects of Electric Current",count:2},
+{subject:"Science",name:"Heredity",count:7},
+{subject:"Science",name:"Our Environment",count:1},
+{subject:"Maths",name:"Statistics",count:2},
+{subject:"Maths",name:"Probability",count:null},
+{subject:"SST",name:"Political Parties",count:1},
+{subject:"SST",name:"Minerals and Energy Resources",count:3},
+{subject:"SST",name:"Globalisation and the Indian Economy",count:2},
+{subject:"SST",name:"Manufacturing Industries",count:4},
+{subject:"SST",name:"Outcomes of Democracy",count:2},
+{subject:"SST",name:"The Age of Industrialisation",count:1}
+];
+
+const defaultSchedule=[
+["Science","06:00","08:00"],
+["Breakfast / Break","08:00","08:30"],
+["Maths","08:30","10:30"],
+["Break","10:30","11:00"],
+["SST","11:00","13:00"],
+["Lunch / Rest","13:00","14:00"],
+["English","14:00","15:00"],
+["Hindi","15:00","16:00"],
+["Break","16:00","17:00"],
+["IT","17:00","18:00"],
+["Revision","18:00","19:00"],
+["Dinner / Rest","19:00","20:00"],
+["Practice + Mistake Notebook","20:00","21:00"]
+];
+
+const extraTasks=[
+"Science lecture and short notes",
+"Maths question practice",
+"SST lecture and written answers",
+"English or Hindi revision",
+"IT revision",
+"Revise today's topics",
+"Update mistake notebook"
+];
+
+const KEY="studymate_v2";
+let data={lectures:{},practice:{},daily:{},sessions:{}};
+let schedule=defaultSchedule.map(x=>[...x]);
+
+function todayString(){
+ const d=new Date();
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function dateKey(){
+ return document.getElementById("studyDate").value||todayString();
+}
+
+function loadData(){
+ try{
+ const saved=JSON.parse(localStorage.getItem(KEY)||"{}");
+ data={...data,...saved};
+ if(Array.isArray(saved.schedule)&&saved.schedule.length){
+ schedule=saved.schedule;
+ }
+ }catch(e){console.log(e);}
+}
+
+function saveData(){
+ try{
+ data.schedule=schedule;
+ localStorage.setItem(KEY,JSON.stringify(data));
+ }catch(e){alert("Unable to save. Check browser storage.");}
+ updateDashboard();
+}
+
+function renderChapters(){
+ const root=document.getElementById("chapters");
+ root.innerHTML="";
+ let last="";
+ chapters.forEach((ch,index)=>{
+ if(ch.subject!==last){
+ last=ch.subject;
+ const h=document.createElement("h2");
+ h.textContent="📖 "+last;
+ root.appendChild(h);
+ }
+ const box=document.createElement("div");
+ box.className="chapter";
+ const top=document.createElement("div");
+ top.className="chapter-top";
+ const info=document.createElement("div");
+ const h=document.createElement("h3");
+ h.textContent=ch.name;
+ const small=document.createElement("small");
+ small.textContent=ch.count===null?"Lecture count not added":ch.count+" lectures";
+ info.append(h,small);
+ const count=document.createElement("small");
+ const arr=data.lectures[index]||[];
+ count.textContent=ch.count===null?"Pending":(ch.count-arr.filter(Boolean).length)+" left";
+ top.append(info,count);
+ box.appendChild(top);
+
+ if(ch.count!==null){
+ const row=document.createElement("div");
+ row.className="lectures";
+ for(let i=0;i<ch.count;i++){
+ const b=document.createElement("button");
+ b.className="lecture";
+ const done=!!data.lectures[index]?.[i];
+ if(done)b.classList.add("done");
+ b.textContent=done?"✓":"L"+(i+1);
+ b.onclick=()=>{
+ if(!data.lectures[index])data.lectures[index]=[];
+ data.lectures[index][i]=!data.lectures[index][i];
+ saveData();
+ renderChapters();
+ };
+ row.appendChild(b);
+ }
+ box.appendChild(row);
+ }
+
+ const label=document.createElement("label");
+ label.className="practice";
+ const check=document.createElement("input");
+ check.type="checkbox";
+ check.checked=!!data.practice[index];
+ check.onchange=()=>{
+ data.practice[index]=check.checked;
+ saveData();
+ };
+ label.append(check,document.createTextNode("Chapter question practice completed"));
+ box.appendChild(label);
+ root.appendChild(box);
+ });
+}
+
+function renderSchedule(){
+ const root=document.getElementById("schedule");
+ root.innerHTML="";
+ const date=dateKey();
+ const done=data.sessions[date]||[];
+
+ schedule.forEach((s,i)=>{
+ const box=document.createElement("div");
+ box.className="session";
+ if(done[i])box.classList.add("finished");
+
+ const top=document.createElement("div");
+ top.className="session-head";
+ const title=document.createElement("strong");
+ title.textContent=s[0];
+ const badge=document.createElement("span");
+ badge.className="badge";
+ badge.textContent=done[i]?"Completed":"Upcoming";
+ if(done[i])badge.classList.add("done");
+ top.append(title,badge);
+
+ const time=document.createElement("small");
+ time.textContent=s[1]+" – "+s[2];
+
+ const label=document.createElement("label");
+ const check=document.createElement("input");
+ check.type="checkbox";
+ check.checked=!!done[i];
+ check.onchange=()=>{
+ if(!data.sessions[date])data.sessions[date]=[];
+ data.sessions[date][i]=check.checked;
+ saveData();
+ renderSchedule();
+ };
+ label.append(check,document.createTextNode("Mark session completed"));
+ box.append(top,time,label);
+ root.appendChild(box);
+ });
+}
+
+function renderTasks(){
+ const root=document.getElementById("dailyTasks");
+ root.innerHTML="";
+ const date=dateKey();
+ extraTasks.forEach((task,i)=>{
+ const label=document.createElement("label");
+ label.className="task";
+ const check=document.createElement("input");
+ check.type="checkbox";
+ check.checked=!!data.daily[date]?.[i];
+ check.onchange=()=>{
+ if(!data.daily[date])data.daily[date]=[];
+ data.daily[date][i]=check.checked;
+ saveData();
+ };
+ label.append(check,document.createTextNode(task));
+ root.appendChild(label);
+ });
+}
+
+function renderEditor(){
+ const root=document.getElementById("editor");
+ root.innerHTML="";
+ schedule.forEach((s,i)=>{
+ const row=document.createElement("div");
+ row.className="editor-row";
+ const name=document.createElement("input");
+ name.type="text";
+ name.value=s[0];
+ name.setAttribute("aria-label","Session name");
+ const start=document.createElement("input");
+ start.type="time";
+ start.value=s[1];
+ start.setAttribute("aria-label","Start time");
+ const end=document.createElement("input");
+ end.type="time";
+ end.value=s[2];
+ end.setAttribute("aria-label","End time");
+ row.append(name,start,end);
+ root.appendChild(row);
+ });
+}
+
+function saveSchedule(){
+ const rows=document.querySelectorAll("#editor .editor-row");
+ const updated=[];
+ for(const row of rows){
+ const inputs=row.querySelectorAll("input");
+ const name=inputs[0].value.trim();
+ const start=inputs[1].value;
+ const end=inputs[2].value;
+ if(!name||!start||!end||end<=start){
+ alert("Please enter a name and valid times. End time must be after start time.");
+ return;
+ }
+ updated.push([name,start,end]);
+ }
+ const sorted=[...updated].sort((a,b)=>a[1].localeCompare(b[1]));
+ for(let i=1;i<sorted.length;i++){
+ if(sorted[i][1]<sorted[i-1][2]){
+ alert("Two sessions overlap. Please adjust their timings.");
+ return;
+ }
+ }
+ schedule=updated;
+ saveData();
+ renderEditor();
+ renderSchedule();
+ updateCurrentSession();
+ alert("Timetable saved successfully!");
+}
+
+function resetSchedule(){
+ if(confirm("Restore the original daily timetable?")){
+ schedule=defaultSchedule.map(x=>[...x]);
+ saveData();
+ renderEditor();
+ renderSchedule();
+ updateCurrentSession();
+ }
+}
+
+function updateDashboard(){
+ let done=0,total=0,practised=0;
+ chapters.forEach((ch,i)=>{
+ if(ch.count!==null){
+ total+=ch.count;
+ done+=(data.lectures[i]||[]).filter(Boolean).length;
+ }
+ if(data.practice[i])practised++;
+ });
+ const p=Math.round(done/total*100);
+ document.getElementById("percent").textContent=p+"%";
+ document.getElementById("mainBar").style.width=p+"%";
+ document.getElementById("completed").textContent=done;
+ document.getElementById("remaining").textContent=total-done;
+ document.getElementById("practised").textContent=practised;
+ document.getElementById("left").textContent=chapters.length-practised;
+ document.getElementById("progressText").textContent=done+" of "+total+" known lectures completed";
+
+ const sessionDone=(data.sessions[dateKey()]||[]).filter(Boolean).length;
+ const sessionPercent=schedule.length?Math.round(sessionDone/schedule.length*100):0;
+ document.getElementById("dailyPercent").textContent=sessionPercent+"%";
+ document.getElementById("dailyBar").style.width=sessionPercent+"%";
+ document.getElementById("dailyCount").textContent=sessionDone+" of "+schedule.length+" sessions completed";
+}
+
+function updateCurrentSession(){
+ const now=new Date();
+ const minutes=now.getHours()*60+now.getMinutes();
+ let current=-1;
+ schedule.forEach((s,i)=>{
+ const start=Number(s[1].slice(0,2))*60+Number(s[1].slice(3));
+ const end=Number(s[2].slice(0,2))*60+Number(s[2].slice(3));
+ if(minutes>=start&&minutes<end)current=i;
+ });
+ const title=document.getElementById("currentTitle");
+ const time=document.getElementById("currentTime");
+ const status=document.getElementById("currentStatus");
+ if(current===-1){
+ title.textContent="No scheduled session right now";
+ time.textContent="Check your timetable for the next session.";
+ status.textContent="Free time / Outside schedule";
+ status.className="badge";
+ }else{
+ const s=schedule[current];
+ title.textContent=s[0];
+ time.textContent=s[1]+" – "+s[2];
+ const completed=!!data.sessions[dateKey()]?.[current];
+ status.textContent=completed?"Session completed":"Your current session";
+ status.className=completed?"badge done":"badge live";
+ }
+}
+
+function showPage(page){
+ document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===page));
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+ if(page==="tracker")renderChapters();
+ if(page==="daily"){renderSchedule();renderTasks();}
+ if(page==="settings")renderEditor();
+}
+
+document.querySelectorAll(".tabs button").forEach(b=>{
+ b.onclick=()=>showPage(b.dataset.page);
+});
+
+function exportData(){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="studymate-backup.json";
+ a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function resetData(){
+ if(confirm("Delete all lecture, practice and daily progress?")){
+ data={lectures:{},practice:{},daily:{},sessions:{}};
+ saveData();
+ renderChapters();
+ renderSchedule();
+ renderTasks();
+ }
+}
+
+function startApp(){
+ document.getElementById("studyDate").value=todayString();
+ document.getElementById("studyDate").onchange=()=>{
+ renderSchedule();
+ renderTasks();
+ updateDashboard();
+ };
+ loadData();
+ document.getElementById("studyDate").value=todayString();
+ updateDashboard();
+ renderChapters();
+ renderSchedule();
+ renderTasks();
+ renderEditor();
+ updateCurrentSession();
+ setInterval(()=>{
+ updateCurrentSession();
+ },30000);
+
+ if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("./sw.js").catch(e=>console.log(e));
+ }
+}
+  
+/* ===== STUDYMATE TOUCH ENGINE ===== */
+
+document.addEventListener("pointerdown",function(event){
+
+ const target=event.target.closest(
+  "button,.card,.chapter,.session"
+ );
+
+ if(!target)return;
+
+ const rect=target.getBoundingClientRect();
+
+ const size=Math.max(rect.width,rect.height)*0.7;
+
+ const ripple=document.createElement("span");
+
+ ripple.className="ripple";
+ ripple.style.width=size+"px";
+ ripple.style.height=size+"px";
+
+ ripple.style.left=(event.clientX-rect.left-size/2)+"px";
+ ripple.style.top=(event.clientY-rect.top-size/2)+"px";
+
+ target.appendChild(ripple);
+
+ setTimeout(function(){
+  ripple.remove();
+ },650);
+
+});
+
+/* Remove splash after opening */
+window.addEventListener("load",function(){
+ const splash=document.getElementById("splash");
+
+ setTimeout(function(){
+  if(splash)splash.remove();
+ },3100);
+});
+startApp();
+</script>
+</body>
+</html>
